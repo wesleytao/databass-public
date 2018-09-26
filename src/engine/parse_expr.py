@@ -12,7 +12,7 @@ grammar = Grammar(
     exprstmt = ws expr ws
     expr     = biexpr / unexpr / value
     biexpr   = value ws binaryop ws expr
-    unexpr   = unaryop expr
+    unexpr   = unaryop 
     value    = parenval / 
                number /
                boolean /

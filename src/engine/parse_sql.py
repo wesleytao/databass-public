@@ -48,7 +48,7 @@ grammar = Grammar(
     # TODO: edit this grammar rule to support the OFFSET syntax
     #       Note that the offset is allowed to be an expression.
     #  offset
-    limit          = LIMIT wsp expr (OFFSET wsp expr)? ws
+    limit          = LIMIT wsp expr (OFFSET wsp expr)?
 
     col_ref        = (table_name ".")? column_name
 
@@ -309,13 +309,13 @@ class Visitor(NodeVisitor):
 
   def visit_limit(self, node, children):
     # TODO: edit this code to pass OFFSET information to the Limit operator
-    offset = None
-    try:
-        offset_param = children[3]
-    if offset:
-        return Limit(None, children[2], offset)
+    #     limit          = LIMIT(0) wsp(1) expr(2) (OFFSET wsp expr)?
+
+    if children[3]:
+        return Limit(None, children[2], children[3]) 
     else:
-        return Limit(None,children[2])
+        return Limit(None, children[2]) # sometimes only limit but not offset
+
 
   def visit_col_ref(self, node, children):
     return Attr(children[1], children[0])
@@ -339,6 +339,7 @@ class Visitor(NodeVisitor):
     return node.text
 
   def visit_biexpr(self, node, children):
+        #   biexpr   = value ws binaryop_no_andor ws expr
     return Expr(children[2], children[0], children[-1])
 
   def visit_unexpr(self, node, children):

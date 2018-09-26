@@ -472,15 +472,12 @@ class Limit(UnaryOp):
   def __init__(self, c, limit, offset = 0):
     """
     @c            child operator
-    @limit        number of tuples to return
+    @limit        number of tuples to return there are multiple type int,literal,expression
     @offset       number of tuples to offset
     """
+ 
     super(Limit, self).__init__(c)
     self.limit = limit
-
-    if offset < 0:
-        raise Exception("OFFSET must not be negative: %d" % offset)
-    self.offset = offset
 
     if isinstance(self.limit, int):
       self.limit = Literal(self.limit)
@@ -488,6 +485,19 @@ class Limit(UnaryOp):
     l =  int(self.limit(None))
     if l < 0:
       raise Exception("LIMIT must not be negative: %d" % l)
+    
+    
+    self.offset = offset
+    if isinstance(self.offset,int):
+        self.offset = Literal(self.offset)
+    if isinstance(self.offset,Expr):
+        self.offset = Literal(self.offset(None,None)) # use expression call function to get value and store in literal
+    
+    o = int(self.offset(None))
+    
+    if o < 0:
+        raise Exception("OFFSET must not be negative: %d" % o)
+    
 
   def __iter__(self):
     # TODO: add code to enforce the offset.  Recall that the offset
@@ -495,8 +505,10 @@ class Limit(UnaryOp):
     #       You may assume that the expression will never reference an
     #       attribute, and will always evaluate to a number
     _limit = int(self.limit(None))
+    _offset = int(self.offset(None))
+    
+    noffset  = _offset
     nyielded = 0
-    noffset  = self.offset
     for i, row in enumerate(self.c):
       if noffset > 0:
           noffset = noffset - 1
@@ -625,6 +637,7 @@ class ExprBase(Op):
     return self.to_str()
 
 class Expr(ExprBase):
+
   def __init__(self, op, l, r=None):
     self.op = op
     self.l = l
@@ -644,6 +657,7 @@ class Expr(ExprBase):
 
 
   def __call__(self, tup, tup2=None):
+        # called by the class or by the instance, but I don't know what this stands for?
     l = self.l(tup, tup2)
     if self.r is None:
       return unary(self.op, l)
@@ -738,6 +752,7 @@ class Literal(ExprBase):
 
 
   def __call__(self, tup=None, tup2=None):
+    # what is tup and tup2 here ? dosen't mean anything ???
     return self.v
 
   def to_str(self):
