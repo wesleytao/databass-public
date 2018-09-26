@@ -15,7 +15,7 @@ except:
 
 def cond_to_func(expr_or_func):
   """
-  Helper function to help automatically interpret string expressions 
+  Helper function to help automatically interpret string expressions
   when you manually construct a query plan.
   """
   from parse_expr import parse
@@ -89,7 +89,7 @@ class Op(object):
     """
     children = []
     for key, attrval in self.__dict__.items():
-      if key == "p": 
+      if key == "p":
         continue
       if not isinstance(attrval, list):
         attrval = [attrval]
@@ -101,7 +101,7 @@ class Op(object):
   def traverse(self, f, path=None):
     """
     Visit each operator in the query plan, and call f()
-    @f a functions that takes as input the current operator and 
+    @f a functions that takes as input the current operator and
        the path to the operator
     """
     if path is None:
@@ -179,7 +179,7 @@ class UnaryOp(Op):
     super(UnaryOp, self).__setattr__(attr, v)
     if attr == "c" and v:
       self.c.p = self
- 
+
 class BinaryOp(Op):
   def __init__(self, l, r):
     super(BinaryOp, self).__init__()
@@ -194,7 +194,7 @@ class BinaryOp(Op):
     super(BinaryOp, self).__setattr__(attr, v)
     if attr in ("l", "r") and v:
       v.p = self
-   
+
 class NaryOp(Op):
   def __init__(self, cs):
     super(NaryOp, self).__init__()
@@ -208,7 +208,7 @@ class NaryOp(Op):
     if attr == "cs":
       for c in self.cs:
         c.p = self
- 
+
 
 #######################################################
 #
@@ -221,7 +221,7 @@ class Print(UnaryOp):
   def __iter__(self):
     for row in self.c:
       print row
-    yield 
+    yield
 
   def to_str(self):
     return "Print()"
@@ -237,7 +237,7 @@ class Source(UnaryOp):
 class SubQuerySource(Source):
   def __init__(self, c, alias=None):
     super(SubQuerySource, self).__init__(c)
-    self.alias = alias 
+    self.alias = alias
 
   def __iter__(self):
     for row in self.c:
@@ -266,7 +266,7 @@ class Scan(Source):
 
     for row in self.db[self.tablename]:
       yield row
-  
+
   def to_str(self):
     return "Scan(%s AS %s)" % (self.tablename, self.alias)
 
@@ -274,7 +274,7 @@ class TableFunctionSource(UnaryOp):
   def __init__(self, function, alias=None):
     super(TableFunctionSource, self).__init__(function)
     self.function = function
-    self.alias = alias 
+    self.alias = alias
 
   def __iter__(self):
     raise Exception("TableFunctionSource: Not implemented")
@@ -295,13 +295,13 @@ class ThetaJoin(Join):
     """
     @l    left (outer) table of the join
     @r    right (inner) table of the join
-    @cond a boolean function that takes as input two tuples, 
+    @cond a boolean function that takes as input two tuples,
           one from the left table, one from the right
           OR
           an expression
     """
     super(ThetaJoin, self).__init__(l, r)
-    self.cond = cond_to_func(cond) 
+    self.cond = cond_to_func(cond)
 
   def __iter__(self):
     for lrow in self.l:
@@ -315,7 +315,7 @@ class ThetaJoin(Join):
   def to_str(self):
     return "THETAJOIN(ON %s)" % (str(self.cond))
 
-    
+
 class HashJoin(Join):
   """
   Hash Join
@@ -324,13 +324,13 @@ class HashJoin(Join):
     """
     @l    left table of the join
     @r    right table of the join
-    @join_attrs two attributes to join on, hash join checks if the 
+    @join_attrs two attributes to join on, hash join checks if the
                 attribute values from the left and right tables are
                 the same.  Suppose:
-                
+
                   l = iowa, r = iowa, join_attrs = ["STORE", "STORE"]
 
-                then we return all pairs of (l, r) where 
+                then we return all pairs of (l, r) where
                 l.STORE = r.STORE
     """
     super(HashJoin, self).__init__(l, r)
@@ -346,11 +346,11 @@ class HashJoin(Join):
   def __iter__(self):
     """
     Build an index on the inner (right) source, then probe the index
-    for each row in the outer (left) source.  
-    
+    for each row in the outer (left) source.
+
     Yields each join result
     """
-    # Hash join is equality on left_attr and right_attr    
+    # Hash join is equality on left_attr and right_attr
     left_attr = str(join_attrs[0])
     right_attr = str(join_attrs[1])
 
@@ -358,7 +358,7 @@ class HashJoin(Join):
 
     # go through the outer source and probe the hashindex
     # make sure to use hash function to get the appropriate hash key
-    # XXX: implement the join code here.  It should construct each 
+    # XXX: implement the join code here.  It should construct each
     #      join result and "yield" it
 
   def build_hash_index(self, child_iter, attr):
@@ -376,11 +376,11 @@ class HashJoin(Join):
       # XXX: replace this code to populate the index
       pass
     return index
-    
+
   def to_str(self):
     return "HASHJOIN(ON %s)" % (str(self.l), str(self.r), str(self.join_attrs))
 
-      
+
 
 class GroupBy(UnaryOp):
   def __init__(self, c, group_exprs):
@@ -414,7 +414,7 @@ class OrderBy(UnaryOp):
   def __init__(self, c, order_exprs, ascdesc="asc"):
     """
     @c            child operator
-    @order_exprs  ordered list of function that take the tuple as input 
+    @order_exprs  ordered list of function that take the tuple as input
                   and outputs a scalar value
     """
     super(OrderBy, self).__init__(c)
@@ -439,7 +439,7 @@ class OrderBy(UnaryOp):
     raise Exception("ORDERBY.__iter__ is not implemented")
 
   def to_str(self):
-    s = ", ".join(["%s %s" % (e, d) 
+    s = ", ".join(["%s %s" % (e, d)
                 for e, d in zip(self.order_exprs, self.ascdesc)])
     return "ORDERBY(%s)" % s
 
@@ -469,28 +469,38 @@ class Filter(UnaryOp):
 class Limit(UnaryOp):
 
   # TODO: Edit this constructor to take as input an offset expression
-  def __init__(self, c, limit):
+  def __init__(self, c, limit, offset = 0):
     """
     @c            child operator
     @limit        number of tuples to return
+    @offset       number of tuples to offset
     """
     super(Limit, self).__init__(c)
     self.limit = limit
+
+    if offset < 0:
+        raise Exception("OFFSET must not be negative: %d" % offset)
+    self.offset = offset
+
     if isinstance(self.limit, int):
       self.limit = Literal(self.limit)
-  
+
     l =  int(self.limit(None))
     if l < 0:
       raise Exception("LIMIT must not be negative: %d" % l)
 
   def __iter__(self):
     # TODO: add code to enforce the offset.  Recall that the offset
-    #       is allowed to be an expression!  
-    #       You may assume that the expression will never reference an 
+    #       is allowed to be an expression!
+    #       You may assume that the expression will never reference an
     #       attribute, and will always evaluate to a number
     _limit = int(self.limit(None))
     nyielded = 0
+    noffset  = self.offset
     for i, row in enumerate(self.c):
+      if noffset > 0:
+          noffset = noffset - 1
+          continue
       if nyielded >= _limit:
         break
       nyielded += 1
@@ -500,7 +510,7 @@ class Limit(UnaryOp):
     # TODO: This should also print the offset.
     #       There's no specific format that you need to adhere to,
     #       But we will check that it prints the offset expression
-    return "LIMIT(%s)" % self.limit
+    return "LIMIT(%s) OFFSET(%s)" % (self.limit,self.offset)
 
 class Distinct(UnaryOp):
 
@@ -534,7 +544,7 @@ class Project(UnaryOp):
         self.aliases.append(None)
       alias = self.aliases[i]
       if not alias:
-        if isinstance(expr, Star): 
+        if isinstance(expr, Star):
           continue
         if isinstance(expr, Attr):
           self.aliases[i] = expr.attr
@@ -568,11 +578,11 @@ class Project(UnaryOp):
 
 ###############################################################
 #
-#  The following are operators for simple Expressions 
+#  The following are operators for simple Expressions
 #  used within Query Operators
 #
 #  e.g.,
-#     f() 
+#     f()
 #     1+2
 #     T.a + 2 / T.b
 #
@@ -626,7 +636,7 @@ class Expr(ExprBase):
     return "%s %s" % (self.op, self.l)
 
   def to_python(self):
-    op = self.op 
+    op = self.op
     if op == "=": op = "=="
     if self.r:
       return "%s %s %s" % (self.l.to_python(), op, self.r.to_python())
@@ -671,7 +681,7 @@ class Between(ExprBase):
     u = self.upper(tup, tup2)
     return e >= l and e <= u
 
-class Func(ExprBase): 
+class Func(ExprBase):
   """
   This object needs to deal with scalar AND aggregation functions.
   """
@@ -726,7 +736,8 @@ class Literal(ExprBase):
   def __init__(self, v):
     self.v = v
 
-  def __call__(self, tup=None, tup2=None): 
+
+  def __call__(self, tup=None, tup2=None):
     return self.v
 
   def to_str(self):

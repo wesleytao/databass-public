@@ -22,7 +22,7 @@ grammar = Grammar(
     select_cores   = select_core (compound_op select_core)*
     select_core    = SELECT wsp select_results from_clause? where_clause? gb_clause?
     select_results = select_result (ws "," ws select_result)*
-    select_result  = sel_res_all_star / sel_res_tab_star / sel_res_val / sel_res_col 
+    select_result  = sel_res_all_star / sel_res_tab_star / sel_res_val / sel_res_col
     sel_res_tab_star = name ".*"
     sel_res_all_star = "*"
     sel_res_val    = expr (AS wsp name)?
@@ -30,7 +30,7 @@ grammar = Grammar(
 
     from_clause    = FROM join_source
     join_source    = ws single_source (ws "," ws single_source)*
-    single_source  = source_func / source_table / source_subq 
+    single_source  = source_func / source_table / source_subq
     source_table   = table_name (AS wsp name)?
     source_subq    = "(" ws query ws ")" (AS wsp name)?
     source_func    = function (AS wsp name)?
@@ -47,7 +47,8 @@ grammar = Grammar(
 
     # TODO: edit this grammar rule to support the OFFSET syntax
     #       Note that the offset is allowed to be an expression.
-    limit          = LIMIT wsp expr
+    #  offset
+    limit          = LIMIT wsp expr ws (OFFSET wsp expr)? ws
 
     col_ref        = (table_name ".")? column_name
 
@@ -57,7 +58,7 @@ grammar = Grammar(
     btwnexpr = value BETWEEN wsp value AND wsp value
     biexpr   = value ws binaryop_no_andor ws expr
     unexpr   = unaryop expr
-    value    = parenval / 
+    value    = parenval /
                number /
                boolean /
                function /
@@ -73,15 +74,15 @@ grammar = Grammar(
     fname    = ~"\w[\w\d]*"i
     boolean  = "true" / "false"
     compound_op = "UNION" / "union"
-    binaryop = "+" / "-" / "*" / "/" / "==" / "=" / "<>" / "!=" / 
+    binaryop = "+" / "-" / "*" / "/" / "==" / "=" / "<>" / "!=" /
                "<=" / ">" / "<" / ">" / "and" / "AND" / "or" / "OR" / "like" / "LIKE"
-    binaryop_no_andor = "+" / "-" / "*" / "/" / "==" / "=" / "<>" / "!=" / 
+    binaryop_no_andor = "+" / "-" / "*" / "/" / "==" / "=" / "<>" / "!=" /
                "<=" / ">" / "<" / ">" / "like" / "LIKE"
     unaryop  = "+" / "-" / "not" / "NOT"
     ws       = ~"\s*"i
     wsp      = ~"\s+"i
 
-    name       = ~"[a-zA-Z]\w*"i /  ~"`[a-zA-Z][\w\.\-\_\:\*]*`"i / ~"\[[a-zA-Z][\w\.\-\_\:\*]*\]"i 
+    name       = ~"[a-zA-Z]\w*"i /  ~"`[a-zA-Z][\w\.\-\_\:\*]*`"i / ~"\[[a-zA-Z][\w\.\-\_\:\*]*\]"i
     table_name = name
     column_name = name
 
@@ -120,6 +121,7 @@ grammar = Grammar(
 	LEFT  = wsp ("LEFT" / "left")
 	LIKE  = wsp ("LIKE" / "like")
 	LIMIT  = wsp ("LIMIT" / "limit")
+    OFFSET = wsp ("OFFSET" / "offset") # add
 	MATCH  = wsp ("MATCH" / "match")
 	NO  = wsp ("NO" / "no")
 	NOT  = wsp ("NOT" / "not")
@@ -159,7 +161,7 @@ grammar = Grammar(
 
 def flatten(children, sidx, lidx):
   """
-  Helper function used in Visitor to flatten and filter 
+  Helper function used in Visitor to flatten and filter
   lists of lists
   """
   ret = [children[sidx]]
@@ -174,12 +176,12 @@ class Visitor(NodeVisitor):
   Each expression in the grammar above of the form
 
       XXX = ....
-  
-  can be handled with a custom function by writing 
-  
+
+  can be handled with a custom function by writing
+
       def visit_XXX(self, node, children):
 
-  You can assume the elements in children are the handled 
+  You can assume the elements in children are the handled
   versions of the corresponding child nodes
   """
   grammar = grammar
@@ -208,7 +210,7 @@ class Visitor(NodeVisitor):
     nodes = filter(bool, [fromc, wherec, gbc, selectc])
     ret = None
     for n in nodes:
-      if not ret: 
+      if not ret:
         ret = n
       else:
         n.c = ret
@@ -252,7 +254,7 @@ class Visitor(NodeVisitor):
 
   def visit_source_subq(self, node, children):
     subq = children[2]
-    alias = children[5] 
+    alias = children[5]
     return SubQuerySource(subq, alias)
 
   def visit_source_func(self, node, children):
@@ -272,7 +274,7 @@ class Visitor(NodeVisitor):
     return Filter(None, ret)
 
   def visit_gb_clause(self, node, children):
-    gb = children[2] 
+    gb = children[2]
     having = children[3]
     if having:
       having.c = gb
@@ -307,7 +309,7 @@ class Visitor(NodeVisitor):
 
   def visit_limit(self, node, children):
     # TODO: edit this code to pass OFFSET information to the Limit operator
-    return Limit(None, children[2])
+    return Limit(None, children[2], children[-1])
 
   def visit_col_ref(self, node, children):
     return Attr(children[1], children[0])
@@ -353,7 +355,7 @@ class Visitor(NodeVisitor):
 
   def visit_arg_list(self, node, children):
     return flatten(children, 0, 1)
-  
+
   def visit_number(self, node, children):
     return Literal(float(node.text))
 
@@ -376,11 +378,9 @@ class Visitor(NodeVisitor):
 
   def generic_visit(self, node, children):
     children = list(filter(lambda v: v and (not isinstance(v, str) or v.strip()), children))
-    if len(children) == 1: 
+    if len(children) == 1:
       return children[0]
     return children
 
 def parse(s):
   return Visitor().parse(s)
-
-
