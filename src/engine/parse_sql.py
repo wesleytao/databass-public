@@ -48,7 +48,7 @@ grammar = Grammar(
     # TODO: edit this grammar rule to support the OFFSET syntax
     #       Note that the offset is allowed to be an expression.
     #  offset
-    limit          = LIMIT wsp expr ws (OFFSET wsp expr)? ws
+    limit          = LIMIT wsp expr (OFFSET wsp expr)? ws
 
     col_ref        = (table_name ".")? column_name
 
@@ -121,7 +121,7 @@ grammar = Grammar(
 	LEFT  = wsp ("LEFT" / "left")
 	LIKE  = wsp ("LIKE" / "like")
 	LIMIT  = wsp ("LIMIT" / "limit")
-    OFFSET = wsp ("OFFSET" / "offset") # add
+    OFFSET = ws ("OFFSET" / "offset") # add
 	MATCH  = wsp ("MATCH" / "match")
 	NO  = wsp ("NO" / "no")
 	NOT  = wsp ("NOT" / "not")
