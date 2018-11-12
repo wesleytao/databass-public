@@ -1,10 +1,23 @@
-# DataBass: Wait for the Table to DROOOOOOOP
+<img src="./docs/databass-small.png" width="600"></img>
+
+
+# DataBass: Not Quite a DataBase
+
+This isn't your average database. This will be the base of operations for exanding your data processing knowledge!  The base of your data exploration in this class!  It will cover the bassics of query execution that you will learn in class!
+
+We present to you....  the **DATABASS..Bass...bass**.  
+
+
+## Getting Started
 
 This is a simple Python-based analytical database for instructional purposes.  See the [system design](./docs/design.md) for details.
 
 Installation
 
     git clone git@github.com:w4111/databass-public.git
+    
+    #If you get an error like 'Fatal' or 'Access denied' try instead doing:
+    #git clone https://github.com/w4111/databass-public.git
 
     # turn on virtualenv
 
@@ -93,8 +106,3 @@ You can execute a simple query, and it will print the query plan and then the re
 	{'a': 1, 'c': 6, 'b': 5, 'd': 7}
 
 
-### Submission Instructions
-
-Run the submission script to package and zip your file.  It will ask you to submit you and your partners' UNIs and specify the assignment. It will create a zip file in the current directory.  Submit the generated ZIP file to Canvas. 
-
-Both partners should submit on their Canvas accounts.
