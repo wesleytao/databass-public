@@ -49,21 +49,11 @@ Make sure your query plan matches the one provided in the comments of each test 
         '''
         Below is what your code should output:
 
-	Test 1 join plan
-		Test 1 join plan
+Test 1 join plan
 WHERE((A.b = 2.0) and (A.b = B.c))
   THETAJOIN(ON A.b = B.c)
     Scan(data AS A)
     Scan(data AS B)
-.WHERE((A.a = 2.0) and (A.b = B.c) and (D.a = E.b) and (E.b = F.c) and (F.c = G.d))
-  FROM()
-    Scan(data AS A)
-    Scan(data AS B)
-    Scan(data2 AS C)
-    Scan(data AS D)
-    Scan(data2 AS E)
-    Scan(data AS F)
-    Scan(data2 AS G)
         '''
         
     def test_selfjoin(self):
