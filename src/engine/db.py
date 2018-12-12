@@ -2,9 +2,10 @@ import pandas
 import numbers
 import os
 try:
-  import instabase.notebook.ipython.utils as ib
-except:
-  pass
+    import instabase.notebook.ipython.utils as ib
+except Exception:
+    # print("not on ib")
+    pass
 
 openfile = open
 try:
@@ -14,15 +15,26 @@ except:
 
 
 class Stats(object):
-  
+
   # XXX: Edit this to compute the table cardinality
   def __init__(self, table):
     self.table = table
-    self.card = 10
+    self.card = len(table.rows)
 
   # XXX: edit this to return the domain of the field
   def __getitem__(self, field):
-    return [0, 1]
+    domain = dict()
+    col = self.table.col_values(field)
+    domain['ndistinct'] = len(set(col))
+    if self.table.type(field) == "num":
+        domain['min'] = min(col)
+        domain['max'] = max(col)
+    elif self.table.type(field) == "str":
+        domain['min'] = None
+        domain['max'] = None
+    else:
+        raise Exception("Unknown type {} ".format(self.table.type(field)))
+    return domain
 
 
 class Table(object):

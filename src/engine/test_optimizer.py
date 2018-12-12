@@ -7,12 +7,12 @@ from db import Database
 import random
 import timeit
 
-	#These functions test whether your code is computing cardinalities correctly. 
-    #We've hardcoded in values from our master databass. 
-    
-    #We're also checking whether your implementation beats the exhaustive_bestplan, 
+	#These functions test whether your code is computing cardinalities correctly.
+    #We've hardcoded in values from our master databass.
+
+    #We're also checking whether your implementation beats the exhaustive_bestplan,
     #which if you follow the suggested directions, should automatically happen.
-    
+
 class TestUnits(unittest.TestCase):
 
     def tearDown(x):
@@ -27,19 +27,21 @@ Make sure your query plan matches the one provided in the comments of each test 
 ########################################
 """
 
-   
+    # def test_see(self):
+    #     print ("test")
+
     def test_card_cost(self):
-        
+
         from db import Database
 
         f = From([
         Scan("data", "A"),
         Scan("data", "B"),
         ])
-  
+
         preds = cond_to_func("(A.b = 2) and (A.b = B.c)")
         w = Filter(f, preds)
-        #print w
+        print w
         db = Database()
         opt = Optimizer(db)
 
@@ -55,9 +57,9 @@ WHERE((A.b = 2.0) and (A.b = B.c))
     Scan(data AS A)
     Scan(data AS B)
         '''
-        
+
     def test_selfjoin(self):
-    #test that self joins work better than exhaustive best plan (w.r.t computation time)  
+    #test that self joins work better than exhaustive best plan (w.r.t computation time)
 
         from db import Database
 
@@ -70,7 +72,7 @@ WHERE((A.b = 2.0) and (A.b = B.c))
         Scan("data", "F"),
         Scan("data", "G")
         ])
-  
+
         preds = cond_to_func("(A.a = 2) and (A.b = B.f) and (D.a = E.b) and (E.b = F.c) and (F.c = G.d)")
         w = Filter(f, preds)
         print w
@@ -113,11 +115,11 @@ WHERE((A.a = 2.0) and (A.b = B.f) and (D.a = E.b) and (E.b = F.c) and (F.c = G.d
             THETAJOIN(ON A.b = B.f)
               Scan(data AS A)
               Scan(data AS B)
- 
+
         '''
     def test_multijoin(self):
-    #test that multi joins work better than exhaustive best plan (w.r.t computation time)  
-    
+    #test that multi joins work better than exhaustive best plan (w.r.t computation time)
+
         from db import Database
 
         f = From([
@@ -129,7 +131,7 @@ WHERE((A.a = 2.0) and (A.b = B.f) and (D.a = E.b) and (E.b = F.c) and (F.c = G.d
         Scan("data", "F"),
         Scan("data2", "G")
         ])
-  
+
         preds = cond_to_func("(A.a = 2) and (A.b = B.c) and (D.a = E.b) and (E.b = F.c) and (F.c = G.d)")
         w = Filter(f, preds)
         print w
@@ -184,4 +186,3 @@ WHERE((A.a = 2.0) and (A.b = B.c) and (D.a = E.b) and (E.b = F.c) and (F.c = G.d
 
 if __name__ == '__main__':
   unittest.main()
-
